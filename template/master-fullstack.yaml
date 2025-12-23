@@ -834,7 +834,7 @@ Resources:
       Role: !GetAtt 
         - RedisRole
         - Arn
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -892,7 +892,7 @@ Resources:
       Description: Get list of books ordered by customerId
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -919,7 +919,7 @@ Resources:
       Description: Get book by id
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -946,7 +946,7 @@ Resources:
       Description: Get list of books by category
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -973,7 +973,7 @@ Resources:
       Description: Update Customer's cart
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1000,7 +1000,7 @@ Resources:
       Description: Get item in cart by customer and book id
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1027,7 +1027,7 @@ Resources:
       Description: Get list of items in cart
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1054,7 +1054,7 @@ Resources:
       Description: Add a book to cart
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1081,7 +1081,7 @@ Resources:
       Description: Remove a book from cart
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1108,7 +1108,7 @@ Resources:
       Description: Get list of books ordered by customerId
       Handler: index.handler
       MemorySize: 256
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1136,7 +1136,7 @@ Resources:
       FunctionName: !Sub '${ProjectName}-UploadBooks'
       Description: Upload sample data for books
       Handler: index.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1285,7 +1285,7 @@ Resources:
       Role: !GetAtt
         - RedisRole
         - Arn
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -2396,7 +2396,7 @@ Resources:
     Type: 'AWS::Cognito::IdentityPool'
     Properties:
       IdentityPoolName: !Sub '${ProjectName}Identity'
-      AllowUnauthenticatedIdentities: true
+      AllowUnauthenticatedIdentities: false
       CognitoIdentityProviders:
         - ClientId: !Ref UserPoolClient
           ProviderName: !GetAtt 
@@ -2679,7 +2679,7 @@ Resources:
         EnvironmentVariables:
           - Name: S3_BUCKET
             Value: !Ref PipelineArtifactsBucket
-        Image: 'aws/codebuild/standard:2.0'
+        Image: 'aws/codebuild/standard:7.0'
         Type: LINUX_CONTAINER
       Name: !Sub '${ProjectName}-build'
       ServiceRole: !Ref CodeBuildRole
@@ -2690,7 +2690,7 @@ Resources:
           phases:
             install:
               runtime-versions:
-                nodejs: 10
+                nodejs: 18
             pre_build:
               commands:
                 - echo Installing NPM dependencies...
@@ -2829,7 +2829,7 @@ Resources:
         'Fn::GetAtt':
           - CreateOSRole
           - Arn
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Timeout: 300
     Type: 'AWS::Lambda::Function'
   ESRoleCreator:
@@ -2858,7 +2858,7 @@ Resources:
         'Fn::GetAtt':
           - SeederRole
           - Arn
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Timeout: 300
       Environment:
         Variables:
