@@ -11,7 +11,7 @@ Conditions:
 Mappings:
   S3Buckets:
     us-east-1:
-      Bucket: aws-bookstore-demo-app-us-east-1
+      Bucket: cf-templates-1t15uvc1kwobu-us-east-1
       NeptuneDataBucket: bookstore-neptune
     us-west-2:
       Bucket: aws-bookstore-demo-app-us-west-2
@@ -26,31 +26,31 @@ Mappings:
     AppKeys:
       SeedRepository: https://s3.amazonaws.com/aws-bookstore-demo/bookstore-webapp.zip
     S3Keys:
-      ListOrdersCode: functions/ListOrders.zip
-      GetBookCode: functions/GetBook.zip
-      ListBooksCode: functions/ListBooks.zip
-      UpdateCartCode: functions/UpdateCart.zip
-      GetCartItemCode: functions/GetCartItem.zip
-      ListItemsInCartCode: functions/ListItemsInCart.zip
-      AddToCartCode: functions/AddToCart.zip
-      RemoveFromCartCode: functions/RemoveFromCart.zip
-      GetBestSellersCode: functions/GetBestSellers.zip
-      CheckoutCode: functions/Checkout.zip
-      UploadBooksCode: functions/UploadBooks.zip
-      GetRecommendationsCode: functions/GetRecommendations.zip
-      GetRecommendationsByBookCode: functions/GetRecommendationsByBook.zip
-      SearchCode: functions/Search.zip
-      UpdateSearchCode: functions/UpdateSearchCluster.zip
-      UpdateBestSellersCode: functions/UpdateBestSellers.zip
-      NeptuneLoaderCode: functions/NeptuneLoader.zip
-      NeptuneIAMCode: functions/NeptuneIAM.zip
+      ListOrdersCode: Grafana-Bookstore/functions/ListOrders.zip
+      GetBookCode: Grafana-Bookstore/functions/GetBook.zip
+      ListBooksCode: Grafana-Bookstore/functions/ListBooks.zip
+      UpdateCartCode: Grafana-Bookstore/functions/UpdateCart.zip
+      GetCartItemCode: Grafana-Bookstore/functions/GetCartItem.zip
+      ListItemsInCartCode: Grafana-Bookstore/functions/ListItemsInCart.zip
+      AddToCartCode: Grafana-Bookstore/functions/AddToCart.zip
+      RemoveFromCartCode: Grafana-Bookstore/functions/RemoveFromCart.zip
+      GetBestSellersCode: Grafana-Bookstore/functions/GetBestSellers.zip
+      CheckoutCode: Grafana-Bookstore/functions/Checkout.zip
+      UploadBooksCode: Grafana-Bookstore/functions/UploadBooks.zip
+      GetRecommendationsCode: Grafana-Bookstore/functions/GetRecommendations.zip
+      GetRecommendationsByBookCode: Grafana-Bookstore/functions/GetRecommendationsByBook.zip
+      SearchCode: Grafana-Bookstore/functions/Search.zip
+      UpdateSearchCode: Grafana-Bookstore/functions/UpdateSearchCluster.zip
+      UpdateBestSellersCode: Grafana-Bookstore/functions/UpdateBestSellers.zip
+      NeptuneLoaderCode: Grafana-Bookstore/functions/NeptuneLoader.zip
+      NeptuneIAMCode: Grafana-Bookstore/functions/NeptuneIAM.zip
       bookstoreNeptuneS3DataPath: /data/
       booksData: data/books.json
-      CreateOSRoleCode: functions/CreateOSRole.zip
-      UpdateConfigCode: functions/UpdateConfig.zip
-      PythonLambdaLayer: functions/PythonLambdaLayer.zip
-      DeleteBucketsCode: functions/DeleteBuckets.zip
-      SeederFunctionCode: functions/aws-serverless-codecommit-seeder.zip
+      CreateOSRoleCode: Grafana-Bookstore/functions/CreateOSRole.zip
+      UpdateConfigCode: Grafana-Bookstore/functions/UpdateConfig.zip
+      PythonLambdaLayer: Grafana-Bookstore/functions/PythonLambdaLayer.zip
+      DeleteBucketsCode: Grafana-Bookstore/functions/DeleteBuckets.zip
+      SeederFunctionCode: Grafana-Bookstore/functions/aws-serverless-codecommit-seeder.zip
 Resources:
 # ---------- VPC - SUBNET - SECURITY GROUPS  ---------
 
@@ -2045,7 +2045,7 @@ Resources:
     - UserPool
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Join [ "", [ "https://s3." , !Ref "AWS::Region" , ".amazonaws.com/" , !FindInMap [ S3Buckets, !Ref 'AWS::Region', Bucket ] , "/templates/bookstore-cognito-user.yaml" ] ]
+      TemplateURL: !Join [ "", [ "https://s3." , !Ref "AWS::Region" , ".amazonaws.com/" , !FindInMap [ S3Buckets, !Ref 'AWS::Region', Bucket ] , "/Grafana-Bookstore/templates/bookstore-cognito-user.yaml" ] ]
       Parameters:
         CognitoUserPool: !Ref UserPool
 
