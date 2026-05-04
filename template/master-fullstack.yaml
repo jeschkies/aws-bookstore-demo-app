@@ -11,7 +11,7 @@ Conditions:
 Mappings:
   S3Buckets:
     us-east-1:
-      Bucket: aws-bookstore-demo-app-us-east-1
+      Bucket: cf-templates-1t15uvc1kwobu-us-east-1
       NeptuneDataBucket: bookstore-neptune
     us-west-2:
       Bucket: aws-bookstore-demo-app-us-west-2
@@ -26,31 +26,31 @@ Mappings:
     AppKeys:
       SeedRepository: https://s3.amazonaws.com/aws-bookstore-demo/bookstore-webapp.zip
     S3Keys:
-      ListOrdersCode: functions/ListOrders.zip
-      GetBookCode: functions/GetBook.zip
-      ListBooksCode: functions/ListBooks.zip
-      UpdateCartCode: functions/UpdateCart.zip
-      GetCartItemCode: functions/GetCartItem.zip
-      ListItemsInCartCode: functions/ListItemsInCart.zip
-      AddToCartCode: functions/AddToCart.zip
-      RemoveFromCartCode: functions/RemoveFromCart.zip
-      GetBestSellersCode: functions/GetBestSellers.zip
-      CheckoutCode: functions/Checkout.zip
-      UploadBooksCode: functions/UploadBooks.zip
-      GetRecommendationsCode: functions/GetRecommendations.zip
-      GetRecommendationsByBookCode: functions/GetRecommendationsByBook.zip
-      SearchCode: functions/Search.zip
-      UpdateSearchCode: functions/UpdateSearchCluster.zip
-      UpdateBestSellersCode: functions/UpdateBestSellers.zip
-      NeptuneLoaderCode: functions/NeptuneLoader.zip
-      NeptuneIAMCode: functions/NeptuneIAM.zip
+      ListOrdersCode: Grafana-Bookstore/functions/ListOrders.zip
+      GetBookCode: Grafana-Bookstore/functions/GetBook.zip
+      ListBooksCode: Grafana-Bookstore/functions/ListBooks.zip
+      UpdateCartCode: Grafana-Bookstore/functions/UpdateCart.zip
+      GetCartItemCode: Grafana-Bookstore/functions/GetCartItem.zip
+      ListItemsInCartCode: Grafana-Bookstore/functions/ListItemsInCart.zip
+      AddToCartCode: Grafana-Bookstore/functions/AddToCart.zip
+      RemoveFromCartCode: Grafana-Bookstore/functions/RemoveFromCart.zip
+      GetBestSellersCode: Grafana-Bookstore/functions/GetBestSellers.zip
+      CheckoutCode: Grafana-Bookstore/functions/Checkout.zip
+      UploadBooksCode: Grafana-Bookstore/functions/UploadBooks.zip
+      GetRecommendationsCode: Grafana-Bookstore/functions/GetRecommendations.zip
+      GetRecommendationsByBookCode: Grafana-Bookstore/functions/GetRecommendationsByBook.zip
+      SearchCode: Grafana-Bookstore/functions/Search.zip
+      UpdateSearchCode: Grafana-Bookstore/functions/UpdateSearchCluster.zip
+      UpdateBestSellersCode: Grafana-Bookstore/functions/UpdateBestSellers.zip
+      NeptuneLoaderCode: Grafana-Bookstore/functions/NeptuneLoader.zip
+      NeptuneIAMCode: Grafana-Bookstore/functions/NeptuneIAM.zip
       bookstoreNeptuneS3DataPath: /data/
       booksData: data/books.json
-      CreateOSRoleCode: functions/CreateOSRole.zip
-      UpdateConfigCode: functions/UpdateConfig.zip
-      PythonLambdaLayer: functions/PythonLambdaLayer.zip
-      DeleteBucketsCode: functions/DeleteBuckets.zip
-      SeederFunctionCode: functions/aws-serverless-codecommit-seeder.zip
+      CreateOSRoleCode: Grafana-Bookstore/functions/CreateOSRole.zip
+      UpdateConfigCode: Grafana-Bookstore/functions/UpdateConfig.zip
+      PythonLambdaLayer: Grafana-Bookstore/functions/PythonLambdaLayer.zip
+      DeleteBucketsCode: Grafana-Bookstore/functions/DeleteBuckets.zip
+      SeederFunctionCode: Grafana-Bookstore/functions/aws-serverless-codecommit-seeder.zip
 Resources:
 # ---------- VPC - SUBNET - SECURITY GROUPS  ---------
 
@@ -111,27 +111,6 @@ Resources:
       RouteTableId: !Ref bookstoreVPCRouteTable
       SubnetId: !Ref bookstoreSubnet2    
     
-  bookstoreNeptuneSecurityGroup:
-    Type: "AWS::EC2::SecurityGroup"
-    Properties:
-      GroupDescription: "Security group for Neptune DB within book store app."
-      SecurityGroupIngress:
-        -
-          CidrIp: "0.0.0.0/0"
-          FromPort: 8182
-          ToPort: 8182
-          IpProtocol: tcp
-      VpcId:
-        Ref: bookstoreVPC
-
-  bookstoreNeptuneSubnetGroup:
-    Type: "AWS::Neptune::DBSubnetGroup"
-    Properties:
-      DBSubnetGroupDescription: "Subnet group for Neptune DB within book store app."
-      SubnetIds:
-        - !Ref bookstoreSubnet1
-        - !Ref bookstoreSubnet2
-
   redisLambdaSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -159,173 +138,7 @@ Resources:
       SubnetIds:
         - Ref: bookstoreSubnet1        
   
-  # ---------- NEPTUNE CLUSTER DEFINITION ---------
-
-  bookstoreNeptuneCluster:
-    Type: "AWS::Neptune::DBCluster"
-    Properties:
-      IamAuthEnabled : false
-      DBSubnetGroupName:
-        Ref: bookstoreNeptuneSubnetGroup
-      VpcSecurityGroupIds: [ !GetAtt bookstoreNeptuneSecurityGroup.GroupId ]
-  bookstoreNeptuneDB:
-    Type: "AWS::Neptune::DBInstance"
-    Properties:
-      DBClusterIdentifier: !Ref bookstoreNeptuneCluster
-      DBInstanceClass: "db.r6g.large"
-
-# ---------- IAM ROLE ATTACH FOR S3 BULK LOAD ------------
-
-  bookstoreNeptuneLoaderS3ReadPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - s3:Get*
-          - s3:List*
-          Effect: Allow
-          Resource: "*"
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneLoaderS3ReadPolicy
-      Roles:
-      - Ref: bookstoreNeptuneLoaderS3ReadRole
-  bookstoreNeptuneLoaderS3ReadRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action: sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service:
-            - rds.amazonaws.com
-        Version: '2012-10-17'
-      Path: /
-
-  # ---------- CUSTOM CLOUDFORMATION RESOURCE FOR ATTACHING S3 READ ROLE TO NEPTUNE CLUSTER ---------
-
-  bookstoreNeptuneIAMAttach:
-    DependsOn: 
-      - bookstoreNeptuneIAMAttachLambdaRoleCloudWatchStream
-      - bookstoreNeptuneIAMAttachLambdaRoleCloudWatchGroup
-      - bookstoreNeptuneIAMAttachLambdaRoleEC2
-      - bookstoreNeptuneIAMAttachLambdaRoleRDS
-      - bookstoreNeptuneIAMAttachLambdaRole
-      - bookstoreNeptuneIAMAttachLambda
-      - bookstoreNeptuneLoaderS3ReadPolicy
-      - bookstoreNeptuneLoaderS3ReadRole
-    Type: Custom::NeptuneIAMAttach
-    Properties: 
-      ServiceToken:
-        Fn::GetAtt: [ bookstoreNeptuneIAMAttachLambda, Arn ]
-      NeptuneDB: !Ref bookstoreNeptuneCluster
-      IAMRole: 
-        Fn::GetAtt: [ bookstoreNeptuneLoaderS3ReadRole, Arn ]
-      Region: !Ref 'AWS::Region'
-  bookstoreNeptuneIAMAttachLambdaRoleCloudWatchStream:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Effect: Allow
-          Resource: !Join [ "", [ "arn:aws:logs:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId" , ":log-group:/aws/lambda/",  !Ref bookstoreNeptuneIAMAttachLambda, ":*" ]]
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneIAMAttachLambdaRoleCloudWatchStream
-      Roles:
-      - Ref: bookstoreNeptuneIAMAttachLambdaRole
-  bookstoreNeptuneIAMAttachLambdaRoleCloudWatchGroup:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - logs:CreateLogGroup
-          Effect: Allow
-          Resource: !Join [ "", [ "arn:aws:logs:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId" , ":*" ]]
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneIAMAttachLambdaRoleCloudWatchGroup
-      Roles:
-      - Ref: bookstoreNeptuneIAMAttachLambdaRole
-  bookstoreNeptuneIAMAttachLambdaRoleEC2:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - ec2:CreateNetworkInterface
-          - ec2:DescribeNetworkInterfaces
-          - ec2:DeleteNetworkInterface
-          - ec2:DetachNetworkInterface
-          Effect: Allow
-          Resource: "*"
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneIAMAttachLambdaRoleEC2
-      Roles:
-      - Ref: bookstoreNeptuneIAMAttachLambdaRole
-  bookstoreNeptuneIAMAttachLambdaRoleRDS:
-    DependsOn: bookstoreNeptuneDB
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - 
-            Action:
-              - rds:AddRoleToDBCluster
-              - rds:DescribeDBClusters
-            Effect: Allow
-            Resource:
-              - "*"
-          - 
-            Action:
-              - iam:PassRole
-            Effect: Allow
-            Resource:
-              - Fn::GetAtt: [ bookstoreNeptuneLoaderS3ReadRole, Arn ]
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneIAMAttachLambdaRoleRDS
-      Roles:
-      - Ref: bookstoreNeptuneIAMAttachLambdaRole
-  bookstoreNeptuneIAMAttachLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action: sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-        Version: '2012-10-17'
-      Path: /
-  bookstoreNeptuneIAMAttachLambda:
-    Type: AWS::Lambda::Function
-    DependsOn: bookstoreNeptuneDB
-    Properties:
-      Code:
-        S3Bucket: !FindInMap 
-                    - S3Buckets
-                    - !Ref 'AWS::Region'
-                    - Bucket
-        S3Key: !FindInMap 
-                 - Constants
-                 - S3Keys
-                 - NeptuneIAMCode
-      Description: 'Lambda function to add an IAM policy to a Neptune cluster to allow for bulk load.'
-      Handler: lambda_function.lambda_handler
-      Layers:
-        - !Ref PythonLambdaLayer
-      MemorySize: 128
-      Role:
-        Fn::GetAtt: [ bookstoreNeptuneIAMAttachLambdaRole, Arn ]
-      Runtime: python3.9
-      Timeout: 30
-
-
-# ---------- VPC ENDPOINT FOR NEPTUNE BULK LOADER ACCESS TO S3 ---------
+# ---------- VPC ENDPOINT FOR S3 ACCESS ---------
 
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -345,132 +158,6 @@ Resources:
         - !Ref bookstoreVPCRouteTable
       ServiceName: !Join [ "" , [ "com.amazonaws.", !Ref "AWS::Region", ".s3"]]
       VpcId: !Ref bookstoreVPC
-
-# ---------- CUSTOM RESOURCE TO INITIATE NEPTUNE BULK LOAD PROCESS ---------
-  bookstoreNeptuneLoader: 
-    DependsOn:
-      - bookstoreNeptuneLoaderLambdaRoleCloudWatchStream
-      - bookstoreNeptuneLoaderLambdaRoleCloudWatchGroup
-      - bookstoreNeptuneLoaderLambdaRoleEC2
-      - bookstoreNeptuneLoaderLambdaRole      
-      - bookstoreNeptuneLoaderLambda
-      - bookstoreNeptuneLoaderS3ReadPolicy
-      - bookstoreNeptuneLoaderS3ReadRole
-      - bookstoreVPCRouteTableAssociation
-      - bookstoreVPCRouteTableAssociationTwo
-      - S3Endpoint
-    Type: "Custom::NeptuneLoader"
-    Properties: 
-      ServiceToken:
-        Fn::GetAtt: [ bookstoreNeptuneLoaderLambda, Arn]
-
-  bookstoreNeptuneLoaderLambdaRoleCloudWatchStream:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Effect: Allow
-          Resource: !Join [ "", [ "arn:aws:logs:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId" , ":log-group:/aws/lambda/",  !Ref bookstoreNeptuneLoaderLambda, ":*" ]]
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneLoaderLambdaRoleCloudWatchStream
-      Roles:
-      - Ref: bookstoreNeptuneLoaderLambdaRole
-  bookstoreNeptuneLoaderLambdaRoleCloudWatchGroup:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - logs:CreateLogGroup
-          Effect: Allow
-          Resource: !Join [ "", [ "arn:aws:logs:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId" , ":*" ]]
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneLoaderLambdaRoleCloudWatchGroup
-      Roles:
-      - Ref: bookstoreNeptuneLoaderLambdaRole
-  bookstoreNeptuneLoaderLambdaRoleEC2:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - ec2:CreateNetworkInterface
-          - ec2:DescribeNetworkInterfaces
-          - ec2:DeleteNetworkInterface
-          - ec2:DetachNetworkInterface          
-          Effect: Allow
-          Resource: "*"
-        Version: '2012-10-17'
-      PolicyName: bookstoreNeptuneLoaderLambdaRoleEC2
-      Roles:
-      - Ref: bookstoreNeptuneLoaderLambdaRole
-  bookstoreNeptuneLoaderLambda:
-    Type: AWS::Lambda::Function
-    DependsOn: 
-      - bookstoreNeptuneDB
-      - S3Endpoint
-    Properties:
-      Code:
-        S3Bucket: !FindInMap 
-                    - S3Buckets
-                    - !Ref 'AWS::Region'
-                    - Bucket
-        S3Key: !FindInMap 
-                 - Constants
-                 - S3Keys
-                 - NeptuneLoaderCode
-      Description: 'Lambda function to load data into Neptune instance.'
-      Environment:
-        Variables:
-          neptunedb:
-            Fn::GetAtt: [ bookstoreNeptuneCluster, Endpoint ] 
-          neptuneloads3path: !Join
-                              - ''
-                              - - 's3://'
-                                - !FindInMap
-                                  - S3Buckets
-                                  - !Ref 'AWS::Region'
-                                  - NeptuneDataBucket
-                                - !FindInMap
-                                  - Constants
-                                  - S3Keys
-                                  - bookstoreNeptuneS3DataPath
-          region: 
-            Ref: "AWS::Region"
-          s3loadiamrole: 
-            Fn::GetAtt: [ bookstoreNeptuneLoaderS3ReadRole, Arn]
-      Handler: lambda_function.lambda_handler
-      MemorySize: 128
-      Layers:
-        - !Ref PythonLambdaLayer
-      Role:
-        Fn::GetAtt: [ bookstoreNeptuneLoaderLambdaRole, Arn ]
-      Runtime: python3.9
-      Timeout: 180
-      VpcConfig:
-        SecurityGroupIds:
-          - Ref: bookstoreNeptuneSecurityGroup
-        SubnetIds:
-          - Ref: bookstoreSubnet1
-          - Ref: bookstoreSubnet2
-  bookstoreNeptuneLoaderLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-        - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action: sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-        Version: '2012-10-17'
-      Path: /
 
 # ---------- ROLES FOR DYNAMODB ---------
   DynamoDbRole:
@@ -523,35 +210,6 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 07b29683-0ea5-44bf-a439-fcb89713fd09
-
-# ---------- ROLES FOR NEPTUNE ---------        
-  RecommendationsLambdaRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: !Sub '${ProjectName}-RecommendationsLambdaRole'
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-      Policies:
-        - PolicyName: RecommendationsLambdaRoleEC2
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 'ec2:CreateNetworkInterface'
-                  - 'ec2:DescribeNetworkInterfaces'
-                  - 'ec2:DeleteNetworkInterface'
-                  - 'ec2:DetachNetworkInterface'
-                Effect: Allow
-                Resource: '*'
-            Version: 2012-10-17
 
 # ---------- DYNAMODB TABLES DEFINITIONS ---------
   TBooks:
@@ -693,8 +351,6 @@ Resources:
                       - /stream/*
   OpenSearchDomain:
     Type: 'AWS::OpenSearchService::Domain'
-    DependsOn:
-      - ESRoleCreator
     Properties:
       DomainName: !Sub '${ProjectName}-domain'
       EngineVersion: OpenSearch_1.3
@@ -760,7 +416,7 @@ Resources:
     Type: 'AWS::ElastiCache::CacheCluster'
     Properties:
       ClusterName: !Sub '${ProjectName}-cluster'
-      CacheNodeType: cache.t2.micro
+      CacheNodeType: cache.t3.micro
       NumCacheNodes: '1'
       Engine: redis
       CacheSubnetGroupName: !Ref bookstoreCacheSubnets
@@ -1165,73 +821,7 @@ Resources:
       'AWS::CloudFormation::Designer':
         id: 9c3f4191-a370-4344-a5b1-626228919c47
 
-# ---------- LAMBDA FUNCTIONS for NEPTUNE ---------  
-
-  FunctionGetRecommendations:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      FunctionName: !Sub '${ProjectName}-GetRecommendations'
-      Code:
-        S3Bucket: !FindInMap 
-          - S3Buckets
-          - !Ref 'AWS::Region'
-          - Bucket
-        S3Key: !FindInMap 
-          - Constants
-          - S3Keys
-          - GetRecommendationsCode
-      Description: Get the top 5 product recommendations from Neptune
-      Environment:
-        Variables:
-          neptunedb: !GetAtt bookstoreNeptuneCluster.Endpoint
-      Handler: index.handler
-      MemorySize: 256
-      Role:
-        'Fn::GetAtt':
-          - RecommendationsLambdaRole
-          - Arn
-      Runtime: python3.9
-      Timeout: 30
-      VpcConfig:
-        SecurityGroupIds:
-          - Ref: bookstoreNeptuneSecurityGroup
-        SubnetIds:
-          - Ref: bookstoreSubnet1
-          - Ref: bookstoreSubnet2
-
-  FunctionGetRecommendationsByBook:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      FunctionName: !Sub '${ProjectName}-GetRecommendationsByBook'
-      Code:
-        S3Bucket: !FindInMap 
-          - S3Buckets
-          - !Ref 'AWS::Region'
-          - Bucket
-        S3Key: !FindInMap 
-          - Constants
-          - S3Keys
-          - GetRecommendationsByBookCode
-      Description: Get friends who purchased this book
-      Environment:
-        Variables:
-          neptunedb: !GetAtt bookstoreNeptuneCluster.Endpoint 
-      Handler: index.handler
-      MemorySize: 256
-      Role:
-        'Fn::GetAtt':
-          - RecommendationsLambdaRole
-          - Arn
-      Runtime: python3.9
-      Timeout: 30
-      VpcConfig:
-        SecurityGroupIds:
-          - Ref: bookstoreNeptuneSecurityGroup
-        SubnetIds:
-          - Ref: bookstoreSubnet1
-          - Ref: bookstoreSubnet2
-        
-# ---------- LAMBDA FUNCTIONS for OPENSEARCH and ELASTICACHE  ---------          
+# ---------- LAMBDA FUNCTIONS for OPENSEARCH and ELASTICACHE  ---------
   FunctionSearch:
     Type: 'AWS::Lambda::Function'
     DependsOn:
@@ -1243,10 +833,10 @@ Resources:
       Description: Search for books across book names, authors, and categories
       Handler: index.handler
       MemorySize: 256
-      Role: !GetAtt 
+      Role: !GetAtt
         - OSSearchRole
         - Arn
-      Runtime: python3.8
+      Runtime: python3.11
       Layers:
         - !Ref PythonLambdaLayer
 
@@ -1326,36 +916,6 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 06a821b7-638e-471c-ab50-51710b73767c
-  FunctionGetRecommendationsPermissions:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      Action: 'lambda:InvokeFunction'
-      FunctionName: !Ref FunctionGetRecommendations
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Join 
-        - ''
-        - - 'arn:aws:execute-api:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':'
-          - !Ref AppApi
-          - /*
-  FunctionGetRecommendationsByBookPermissions:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      Action: 'lambda:InvokeFunction'
-      FunctionName: !Ref FunctionGetRecommendationsByBook
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Join 
-        - ''
-        - - 'arn:aws:execute-api:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':'
-          - !Ref AppApi
-          - /* 
   FunctionGetBookPermissions:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -1547,120 +1107,6 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 3e7a32d4-9e4d-4ecc-89b2-77203c5d926b
-  RecomendationsApiRequestGET:
-    DependsOn:
-      - FunctionGetRecommendations
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      AuthorizationType: AWS_IAM
-      HttpMethod: GET
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Join 
-          - ''
-          - - 'arn:aws:apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
-            - !GetAtt 
-              - FunctionGetRecommendations
-              - Arn
-            - /invocations
-        IntegrationResponses:
-          - StatusCode: 200
-      ResourceId: !Ref RecommendationsApiResource
-      RestApiId: !Ref AppApi
-      MethodResponses:
-        - StatusCode: 200
-          ResponseModels:
-            application/json: Empty
-  RecomendationsApiRequestOPTIONS:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      ResourceId: !Ref RecommendationsApiResource
-      RestApiId: !Ref AppApi
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: >-
-                'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
-              method.response.header.Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH'''
-              method.response.header.Access-Control-Allow-Origin: '''*'''
-            ResponseTemplates:
-              application/json: ''
-            StatusCode: '200'
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-      MethodResponses:
-        - ResponseModels:
-            application/json: Empty
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
-          StatusCode: '200'
-  RecomendationsByBookApiRequestGET:
-    DependsOn:
-      - FunctionGetRecommendationsByBook
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      AuthorizationType: AWS_IAM
-      HttpMethod: GET
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Join 
-          - ''
-          - - 'arn:aws:apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
-            - !GetAtt 
-              - FunctionGetRecommendationsByBook
-              - Arn
-            - /invocations
-        IntegrationResponses:
-          - StatusCode: 200
-      ResourceId: !Ref RecommendationsByBookApiResource
-      RequestParameters:
-        method.request.path.bookId: false
-      RestApiId: !Ref AppApi
-      MethodResponses:
-        - StatusCode: 200
-          ResponseModels:
-            application/json: Empty
-  RecomendationsByBookApiRequestOPTIONS:
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      ResourceId: !Ref RecommendationsByBookApiResource
-      RestApiId: !Ref AppApi
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: >-
-                'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
-              method.response.header.Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH'''
-              method.response.header.Access-Control-Allow-Origin: '''*'''
-            ResponseTemplates:
-              application/json: ''
-            StatusCode: '200'
-        PassthroughBehavior: WHEN_NO_MATCH
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-      MethodResponses:
-        - ResponseModels:
-            application/json: Empty
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
-          StatusCode: '200'        
   BooksApiRequestGET:
     DependsOn:
       - FunctionListOrdersPermissions
@@ -2206,20 +1652,6 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: true
           StatusCode: '200'
           
-  RecommendationsApiResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref AppApi
-      ParentId: !GetAtt 
-        - AppApi
-        - RootResourceId
-      PathPart: recommendations
-  RecommendationsByBookApiResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref AppApi
-      ParentId: !Ref RecommendationsApiResource
-      PathPart: '{bookId}'    
   BooksApiResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
@@ -2319,10 +1751,6 @@ Resources:
       - CartApiRequestOPTIONS
       - CartItemApiRequestGET
       - CartItemApiRequestOPTIONS
-      - RecomendationsApiRequestGET
-      - RecomendationsApiRequestOPTIONS
-      - RecomendationsByBookApiRequestGET
-      - RecomendationsByBookApiRequestOPTIONS
       - SearchApiRequestGET
       - SearchApiRequestOPTIONS
       - BestsellersApiRequestGET
@@ -2489,14 +1917,6 @@ Resources:
        - OpenSearchDomain
 
 # ------------------------ FRONTEND ------------------------
-  AssetsCodeRepository:
-    Type: 'AWS::CodeCommit::Repository'
-    Properties:
-      RepositoryDescription: Code repository for web application
-      RepositoryName: !Sub '${ProjectName}-WebAssets'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a2e798f0-374b-4297-b68f-ce7766170a6d
   AssetsBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
@@ -2561,385 +1981,6 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 16b95097-f526-4bf7-b997-ce2f6187ef4d
-  CodeBuildRole:
-    Description: Creating service role in IAM for AWS CodeBuild
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: !Sub '${ProjectName}-codebuild-role'
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codebuild.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: codebuild-policy
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 's3:PutObject'
-                  - 's3:GetObject'
-                  - 's3:GetObjectVersion'
-                  - 's3:GetBucketVersioning'
-                Resource:
-                  - !Join 
-                    - ''
-                    - - !GetAtt AssetsBucket.Arn
-                      - /*
-                  - !Join 
-                    - ''
-                    - - !GetAtt PipelineArtifactsBucket.Arn
-                      - /*
-                Effect: Allow
-        - PolicyName: codebuild-logs
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                  - 'logs:CreateLogGroup'
-                  - 'cloudfront:CreateInvalidation'
-                Resource: '*'
-                Effect: Allow
-      Path: /
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 3aa76bbe-43cb-455a-9e85-48663b8ba66e
-  CodePipelineRole:
-    Description: Creating service role in IAM for AWS CodePipeline
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: !Sub '${ProjectName}-CodePipeline-Role'
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codepipeline.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: codecommit-for-codepipeline
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 'codecommit:GetBranch'
-                  - 'codecommit:GetCommit'
-                  - 'codecommit:UploadArchive'
-                  - 'codecommit:GetUploadArchiveStatus'
-                  - 'codecommit:CancelUploadArchive'
-                Resource: !GetAtt AssetsCodeRepository.Arn
-                Effect: Allow
-        - PolicyName: artifacts-for-pipeline
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 's3:PutObject'
-                  - 's3:GetObject'
-                Resource:
-                  'Fn::Join':
-                    - ''
-                    - - 'Fn::GetAtt':
-                        - PipelineArtifactsBucket
-                        - Arn
-                      - /*
-                Effect: Allow
-        - PolicyName: codebuild-for-pipeline
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 'codebuild:BatchGetBuilds'
-                  - 'codebuild:StartBuild'
-                Resource: !GetAtt 
-                  - CodeBuildProject
-                  - Arn
-                Effect: Allow
-      Path: /
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: c7b2d059-8720-4407-a75f-9b5f50c503d1
-  PipelineArtifactsBucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      AccessControl: Private
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: bbbc886f-d307-45dc-a6e3-63353f40a4f4
-  CodeBuildProject:
-    DependsOn:
-      - PipelineArtifactsBucket
-    Description: Creating AWS CodeBuild project
-    Type: 'AWS::CodeBuild::Project'
-    Properties:
-      Artifacts:
-        Type: CODEPIPELINE
-      Description: !Sub 'Building stage for ${ProjectName}.'
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        EnvironmentVariables:
-          - Name: S3_BUCKET
-            Value: !Ref PipelineArtifactsBucket
-        Image: 'aws/codebuild/standard:7.0'
-        Type: LINUX_CONTAINER
-      Name: !Sub '${ProjectName}-build'
-      ServiceRole: !Ref CodeBuildRole
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub |
-          version: 0.2
-          phases:
-            install:
-              runtime-versions:
-                nodejs: 18
-            pre_build:
-              commands:
-                - echo Installing NPM dependencies...
-                - npm install
-            build:
-              commands:
-                - npm run build
-            post_build:
-              commands:
-                - echo Uploading to AssetsBucket 
-                - aws s3 cp --recursive ./build s3://${AssetsBucket}/ 
-                - aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://${AssetsBucket}/
-                - aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://${AssetsBucket}/
-                - aws cloudfront create-invalidation --distribution-id ${AssetsCDN} --paths /index.html /service-worker.js
-
-          artifacts:
-            files:
-              - '**/*'
-            base-directory: build        
-      Tags:
-        - Key: app-name
-          Value: !Ref ProjectName
-      TimeoutInMinutes: 5
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a83e893f-d993-4a92-9c51-b00425960a96
-  AssetsCodePipeline:
-    Type: 'AWS::CodePipeline::Pipeline'
-    Properties:
-      Name: !Sub '${ProjectName}-Assets-Pipeline'
-      RoleArn: !GetAtt 
-        - CodePipelineRole
-        - Arn
-      ArtifactStore:
-        Location: !Ref PipelineArtifactsBucket
-        Type: S3
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              InputArtifacts: []
-              ActionTypeId:
-                Version: '1'
-                Category: Source
-                Owner: AWS
-                Provider: CodeCommit
-              Configuration:
-                BranchName: master
-                RepositoryName: !Sub '${ProjectName}-WebAssets'
-              OutputArtifacts:
-                - Name: !Sub '${ProjectName}-SourceArtifact'
-        - Name: Build
-          Actions:
-            - Name: build-and-deploy
-              InputArtifacts:
-                - Name: !Sub '${ProjectName}-SourceArtifact'
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: '1'
-                Provider: CodeBuild
-              OutputArtifacts:
-                - Name: !Sub '${ProjectName}-BuildArtifact'
-              Configuration:
-                ProjectName: !Sub '${ProjectName}-build'
-              RunOrder: 1
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: bd7060e4-3e26-442c-9c4e-141ca61a9590
-    DependsOn:
-      - PipelineArtifactsBucket
-  SeederFunction:
-    Properties:
-      Code:
-        S3Bucket: !FindInMap
-          - S3Buckets
-          - !Ref 'AWS::Region'
-          - Bucket
-        S3Key: !FindInMap
-         - Constants
-         - S3Keys
-         - SeederFunctionCode
-      Description: CodeCommit repository seeder
-      Handler: seeder.SeedRepositoryHandler
-      MemorySize: 3008
-      Role:
-        'Fn::GetAtt':
-          - SeederRole
-          - Arn
-      Runtime: java11
-      Timeout: 900
-    Type: 'AWS::Lambda::Function'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 6b5081a3-db00-41db-a607-c9d5f98cf394
-    DependsOn:
-      - AssetsCodeRepository
-  CreateOSRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: !Sub '${ProjectName}-CreateOSRole'
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-      Policies:
-        - PolicyName: CreateRolePolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'iam:CreateServiceLinkedRole'
-                Resource: 'arn:aws:iam::*:role/aws-service-role/opensearchservice.amazonaws.com/AWSServiceRoleForAmazonOpenSearchService'
-  CreateOSRoleFunction:
-    Properties:
-      Code:
-        S3Bucket: !FindInMap
-          - S3Buckets
-          - !Ref 'AWS::Region'
-          - Bucket
-        S3Key: !FindInMap
-          - Constants
-          - S3Keys
-          - CreateOSRoleCode
-      Description: Create OpenSearch role
-      Handler: index.handler
-      Role:
-        'Fn::GetAtt':
-          - CreateOSRole
-          - Arn
-      Runtime: nodejs20.x
-      Timeout: 300
-    Type: 'AWS::Lambda::Function'
-  ESRoleCreator:
-    Type: 'Custom::CustomResource'
-    Properties:
-      ServiceToken: !GetAtt CreateOSRoleFunction.Arn
-      ParameterOne: Parameter to pass into Custom Lambda Function
-      DependsOn: CreateOSRoleFunction
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 63b08124-fccb-4874-ab13-ce6cfe6ce885
-  UpdateConfigFunction:
-    Properties:
-      Code:
-        S3Bucket: !FindInMap
-          - S3Buckets
-          - !Ref 'AWS::Region'
-          - Bucket
-        S3Key: !FindInMap
-          - Constants
-          - S3Keys
-          - UpdateConfigCode
-      Description: Update config for CodeCommit repository
-      Handler: index.handler
-      Role:
-        'Fn::GetAtt':
-          - SeederRole
-          - Arn
-      Runtime: nodejs20.x
-      Timeout: 300
-      Environment:
-        Variables:
-          API_URL: !Sub 'https://${AppApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
-          BRANCH_NAME: master
-          REGION: !Ref 'AWS::Region'
-          REPOSITORY_NAME: !Sub '${ProjectName}-WebAssets'
-          USER_POOL_ID: !Ref UserPool
-          APP_CLIENT_ID: !Ref UserPoolClient
-          IDENTITY_POOL_ID: !Ref IdentityPool
-    Type: 'AWS::Lambda::Function'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 00cdcc4b-3885-4a51-bdad-776ac697419c
-    DependsOn:
-      - AssetsCodeRepository
-      - SeederFunction
-      - RepositorySeeder
-      - AppApi
-      - UserPool
-      - UserPoolClient
-      - IdentityPool
-  SeederRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - 'sts:AssumeRole'
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-      Policies:
-        - PolicyDocument:
-            Statement:
-              - Action:
-                  - 'codecommit:GetRepository'
-                  - 'codecommit:GitPush'
-                  - 'codecommit:GetBranch'
-                  - 'codecommit:PutFile'
-                Effect: Allow
-                Resource: !GetAtt AssetsCodeRepository.Arn
-            Version: 2012-10-17
-          PolicyName: SeederRolePolicy
-        - PolicyDocument:
-            Statement:
-              - Action:
-                  - 'logs:*'
-                Effect: Allow
-                Resource: 'arn:aws:logs:*:*:*'
-            Version: 2012-10-17
-          PolicyName: LogsPolicy
-    Type: 'AWS::IAM::Role'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a10d77af-fa97-40ee-a6f0-5d9988792aeb
-  RepositorySeeder:
-    Properties:
-      ServiceToken:
-        'Fn::GetAtt':
-          - SeederFunction
-          - Arn
-      sourceUrl: !FindInMap [Constants, AppKeys, SeedRepository]
-      targetRepositoryName: !Sub '${ProjectName}-WebAssets'
-      targetRepositoryRegion: '${AWS::Region}'
-    Type: 'Custom::RepositorySeeder'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 688ea29a-9fa9-40c9-b5a8-85e863cc8a4c
-  RepositoryUpdater:
-    Type: 'Custom::CustomResource'
-    Properties:
-      ServiceToken: !GetAtt UpdateConfigFunction.Arn
-      ParameterOne: Parameter to pass into Custom Lambda Function
-      DependsOn: UpdateConfigFunction
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 63b08124-fccb-4874-ab13-ce6cfe6ce885
 # ---------- CLEANUP STACK ---------
   BucketCleanupRole:
     Type: 'AWS::IAM::Role'
@@ -2966,9 +2007,7 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !GetAtt AssetsBucket.Arn
-                  - !GetAtt PipelineArtifactsBucket.Arn
                   - !Join [ "", [ !GetAtt AssetsBucket.Arn , "/*" ]]
-                  - !Join [ "", [ !GetAtt PipelineArtifactsBucket.Arn , "/*" ]]
             Version: 2012-10-17
   BucketCleanupFunction:
     Type: 'AWS::Lambda::Function'
@@ -2997,7 +2036,6 @@ Resources:
       ServiceToken: !GetAtt BucketCleanupFunction.Arn
       BucketNames:
         - !Ref AssetsBucket
-        - !Ref PipelineArtifactsBucket
       DependsOn:
         - BucketCleanupFunction
         - BucketCleanupRole
@@ -3007,16 +2045,11 @@ Resources:
     - UserPool
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Join [ "", [ "https://s3." , !Ref "AWS::Region" , ".amazonaws.com/" , !FindInMap [ S3Buckets, !Ref 'AWS::Region', Bucket ] , "/templates/bookstore-cognito-user.yaml" ] ]
+      TemplateURL: !Join [ "", [ "https://s3." , !Ref "AWS::Region" , ".amazonaws.com/" , !FindInMap [ S3Buckets, !Ref 'AWS::Region', Bucket ] , "/Grafana-Bookstore/templates/bookstore-cognito-user.yaml" ] ]
       Parameters:
         CognitoUserPool: !Ref UserPool
 
 Outputs:
-  CodeRepository:
-    Description: Code repository for the web application.
-    Export:
-      Name: !Sub '${ProjectName}CodeRepository'
-    Value: !GetAtt AssetsCodeRepository.Name
   WebApplication:
     Description: The URL for the web application
     Export:
