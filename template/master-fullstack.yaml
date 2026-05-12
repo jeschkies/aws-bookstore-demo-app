@@ -176,6 +176,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
       Policies:
         - PolicyName: PutRidePolicy
           PolicyDocument:
@@ -302,6 +303,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
       Policies:
         - PolicyName: !Sub '${ProjectName}-lambda-policy'
           PolicyDocument:
@@ -407,6 +409,7 @@ Resources:
         - 'arn:aws:iam::aws:policy/AmazonElastiCacheFullAccess'
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
         - 'arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB'
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
 
 # ---------- ELASTICACHE DEFINITIONS ---------         
   ElastiCacheCluster:
@@ -456,6 +459,8 @@ Resources:
         - OSSearchRole
         - Arn
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -491,6 +496,8 @@ Resources:
         - RedisRole
         - Arn
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -549,6 +556,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -576,6 +585,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -603,6 +614,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -630,6 +643,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -657,6 +672,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -684,6 +701,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -711,6 +730,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -738,6 +759,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -765,6 +788,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -793,6 +818,8 @@ Resources:
       Description: Upload sample data for books
       Handler: index.handler
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -837,6 +864,8 @@ Resources:
         - OSSearchRole
         - Arn
       Runtime: python3.11
+      TracingConfig:
+        Mode: Active
       Layers:
         - !Ref PythonLambdaLayer
 
@@ -876,6 +905,8 @@ Resources:
         - RedisRole
         - Arn
       Runtime: nodejs20.x
+      TracingConfig:
+        Mode: Active
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -1997,6 +2028,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
         - PolicyName: BucketCleanupPolicy
           PolicyDocument:
@@ -2018,6 +2050,8 @@ Resources:
       MemorySize: 256
       Role: !GetAtt BucketCleanupRole.Arn
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: 30
       Layers:
         - !Ref PythonLambdaLayer

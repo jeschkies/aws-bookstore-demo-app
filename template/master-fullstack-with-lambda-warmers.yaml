@@ -323,6 +323,8 @@ Resources:
       Role:
         Fn::GetAtt: [ bookstoreNeptuneIAMAttachLambdaRole, Arn ]
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: 30
 
 
@@ -450,6 +452,8 @@ Resources:
       Role:
         Fn::GetAtt: [ bookstoreNeptuneLoaderLambdaRole, Arn ]
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: 180
       VpcConfig:
         SecurityGroupIds:
@@ -490,6 +494,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
       Policies:
         - PolicyName: PutRidePolicy
           PolicyDocument:
@@ -645,6 +650,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
       Policies:
         - PolicyName: !Sub '${ProjectName}-lambda-policy'
           PolicyDocument:
@@ -752,6 +758,7 @@ Resources:
         - 'arn:aws:iam::aws:policy/AmazonElastiCacheFullAccess'
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
         - 'arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB'
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
 
 # ---------- ELASTICACHE DEFINITIONS ---------         
   ElastiCacheCluster:
@@ -801,6 +808,8 @@ Resources:
         - OSSearchRole
         - Arn
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -836,6 +845,8 @@ Resources:
         - RedisRole
         - Arn
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -894,6 +905,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -921,6 +934,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -948,6 +963,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -975,6 +992,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1002,6 +1021,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1029,6 +1050,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1056,6 +1079,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1083,6 +1108,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1110,6 +1137,8 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1138,6 +1167,8 @@ Resources:
       Description: Upload sample data for books
       Handler: index.handler
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Role: !GetAtt 
         - DynamoDbRole
         - Arn
@@ -1192,6 +1223,8 @@ Resources:
           - RecommendationsLambdaRole
           - Arn
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:
@@ -1224,6 +1257,8 @@ Resources:
           - RecommendationsLambdaRole
           - Arn
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:
@@ -1248,6 +1283,8 @@ Resources:
         - OSSearchRole
         - Arn
       Runtime: python3.8
+      TracingConfig:
+        Mode: Active
       Layers:
         - !Ref PythonLambdaLayer
 
@@ -1287,6 +1324,8 @@ Resources:
         - RedisRole
         - Arn
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Timeout: '60'
       VpcConfig:
         SecurityGroupIds:
@@ -2782,6 +2821,8 @@ Resources:
           - SeederRole
           - Arn
       Runtime: java8
+      TracingConfig:
+        Mode: Active
       Timeout: 900
     Type: 'AWS::Lambda::Function'
     Metadata:
@@ -2831,6 +2872,8 @@ Resources:
           - CreateOSRole
           - Arn
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Timeout: 300
     Type: 'AWS::Lambda::Function'
   ESRoleCreator:
@@ -2860,6 +2903,8 @@ Resources:
           - SeederRole
           - Arn
       Runtime: nodejs16.x
+      TracingConfig:
+        Mode: Active
       Timeout: 300
       Environment:
         Variables:
@@ -2957,6 +3002,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
         - PolicyName: BucketCleanupPolicy
           PolicyDocument:
@@ -2980,6 +3026,8 @@ Resources:
       MemorySize: 256
       Role: !GetAtt BucketCleanupRole.Arn
       Runtime: python3.9
+      TracingConfig:
+        Mode: Active
       Timeout: 30
       Layers:
         - !Ref PythonLambdaLayer

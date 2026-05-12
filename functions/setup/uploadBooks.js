@@ -3,7 +3,8 @@
 const https = require("https"); 
 const url = require("url");
 
-var AWS = require("aws-sdk"),
+var AWSXRay = require("aws-xray-sdk-core"),
+AWS = AWSXRay.captureAWS(require("aws-sdk")),
 documentClient = new AWS.DynamoDB.DocumentClient(),
 s3Client = new AWS.S3;
 
