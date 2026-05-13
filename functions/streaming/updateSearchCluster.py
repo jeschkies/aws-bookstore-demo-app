@@ -1,7 +1,7 @@
 import boto3
 import os
+import requests
 from aws_xray_sdk.core import patch_all
-from botocore.vendored import requests
 from requests_aws4auth import AWS4Auth
 
 patch_all()
