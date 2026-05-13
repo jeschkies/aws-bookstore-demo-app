@@ -25,7 +25,7 @@ def handler(event, context):
     for record in event["Records"]:
         # Get the primary key for use as the Elasticsearch ID
         id = record["dynamodb"]["Keys"]["id"]["S"]
-        print "bookId " + id
+        print("bookId " + id)
 
         if record['eventName'] == 'REMOVE':
             r = requests.delete(url + id, auth=awsauth)
