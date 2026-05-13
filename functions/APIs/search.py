@@ -2,7 +2,10 @@ import boto3
 import json
 import os
 import requests
+from aws_xray_sdk.core import patch_all
 from requests_aws4auth import AWS4Auth
+
+patch_all()
 
 region = os.environ["REGION"]
 service = "es"
