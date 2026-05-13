@@ -159,6 +159,34 @@ Resources:
       ServiceName: !Join [ "" , [ "com.amazonaws.", !Ref "AWS::Region", ".s3"]]
       VpcId: !Ref bookstoreVPC
 
+# ---------- VPC ENDPOINT FOR X-RAY ACCESS ---------
+# Lets VPC-attached Lambdas (Search, UpdateSearchCluster, GetBestSellers,
+# UpdateBestSellers) reach xray.${AWS::Region}.amazonaws.com to publish
+# trace segments. Without this, segments are silently dropped.
+
+  xrayEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref bookstoreVPC
+      GroupDescription: Allow Lambdas in the bookstore VPC to reach the X-Ray interface endpoint on 443
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !GetAtt bookstoreVPC.CidrBlock
+
+  XRayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref bookstoreVPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.xray'
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SubnetIds:
+        - !Ref bookstoreSubnet1
+      SecurityGroupIds:
+        - !Ref xrayEndpointSecurityGroup
+
 # ---------- ROLES FOR DYNAMODB ---------
   DynamoDbRole:
     Type: 'AWS::IAM::Role'
@@ -1791,6 +1819,8 @@ Resources:
       Description: Prod deployment for API
       RestApiId: !Ref AppApi
       StageName: prod
+      StageDescription:
+        TracingEnabled: true
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 278dda65-02c9-49fa-a19c-3dd7afd25683
