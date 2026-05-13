@@ -29,7 +29,7 @@ def handler(event, context):
             }
         }
     }
-    print query
+    print(query)
 
     # ES 6.x requires an explicit Content-Type header
     headers = { "Content-Type": "application/json" }
@@ -48,5 +48,5 @@ def handler(event, context):
     }
 
     # Add the search results to the response
-    print response
+    print(response)
     return response
