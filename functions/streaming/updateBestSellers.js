@@ -17,10 +17,20 @@ exports.handler = (event, context, callback) => {
     console.log("Redis connection closed");
   });
 
-  event.Records && event.Records.forEach((record) => {         
-    const booksList = record.dynamodb.NewImage.books.L;
+  event.Records && event.Records.forEach((record) => {
+    // Skip records that don't carry a NewImage with a books list (e.g. REMOVE
+    // events, or older records with a different schema). Without this guard
+    // a single malformed record is a poison pill: Lambda's stream consumer
+    // retries it forever, blocking every subsequent order from being
+    // processed.
+    const newImage = record.dynamodb && record.dynamodb.NewImage;
+    if (!newImage || !newImage.books || !newImage.books.L) {
+      console.log("skipping record without NewImage.books.L:", JSON.stringify(record.dynamodb));
+      return;
+    }
+    const booksList = newImage.books.L;
     for (var i = 0; i < booksList.length; i++) {
-      var book = record.dynamodb.NewImage.books.L[i];
+      var book = booksList[i];
       console.log("book: " + JSON.stringify(book));
             
       var itemsSold = book.M.quantity.N;
