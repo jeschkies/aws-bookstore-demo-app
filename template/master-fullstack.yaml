@@ -1882,6 +1882,10 @@ Resources:
       ClientName: !Sub '${ProjectName}-client'
       GenerateSecret: false
       UserPoolId: !Ref UserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
   IdentityPool:
     Type: 'AWS::Cognito::IdentityPool'
     Properties:
