@@ -17,6 +17,15 @@ exports.handler = (event, context, callback) => {
     console.log("Redis connection closed");
   });
 
+  let pending = 0;
+  let done = false;
+  function finish(result) {
+    if (done) return;
+    done = true;
+    redisClient.quit();
+    callback(null, result);
+  }
+
   event.Records && event.Records.forEach((record) => {
     // Skip records that don't carry a NewImage with a books list (e.g. REMOVE
     // events, or older records with a different schema). Without this guard
@@ -31,23 +40,22 @@ exports.handler = (event, context, callback) => {
     const booksList = newImage.books.L;
     for (var i = 0; i < booksList.length; i++) {
       var book = booksList[i];
-      console.log("book: " + JSON.stringify(book));
-            
       var itemsSold = book.M.quantity.N;
       var value = book.M.bookId.S; // bookId
       var key = "TopBooks:AllTime";
 
+      pending++;
       // Increment the score of the member (bookId) in the sorted set stored at key (TopBooks:AllTime) by increment (itemsSold)
       // If the bookId does not exist in the sorted set, it is added with increment as its score
       redisClient.zincrby(key, itemsSold, JSON.stringify(value), (error, reply) => {
-        if(error) {
-          console.log("error: " + error);
-          callback(null, error);
-        }
-        console.log("reply: " + reply);
-        callback(null, reply);
+        if (error) console.log("zincrby error:", error);
+        else console.log("zincrby reply:", reply);
+        if (--pending === 0) finish("ok");
       });
-      console.log("Value inserted.");
     }
   });
+
+  // If no records had a books list, terminate immediately so the stream
+  // consumer can move on instead of timing out.
+  if (pending === 0) finish("no-op");
 }
