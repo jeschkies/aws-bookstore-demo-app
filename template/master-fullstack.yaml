@@ -34,14 +34,14 @@ Mappings:
       ListItemsInCartCode: Grafana-Bookstore/functions/ListItemsInCart.zip
       AddToCartCode: Grafana-Bookstore/functions/AddToCart.zip
       RemoveFromCartCode: Grafana-Bookstore/functions/RemoveFromCart.zip
-      GetBestSellersCode: Grafana-Bookstore/functions/GetBestSellers.zip
+      GetBestSellersCode: Grafana-Bookstore/functions/GetBestSellers-v2.zip
       CheckoutCode: Grafana-Bookstore/functions/Checkout.zip
       UploadBooksCode: Grafana-Bookstore/functions/UploadBooks.zip
       GetRecommendationsCode: Grafana-Bookstore/functions/GetRecommendations.zip
       GetRecommendationsByBookCode: Grafana-Bookstore/functions/GetRecommendationsByBook.zip
       SearchCode: Grafana-Bookstore/functions/Search.zip
       UpdateSearchCode: Grafana-Bookstore/functions/UpdateSearchCluster.zip
-      UpdateBestSellersCode: Grafana-Bookstore/functions/UpdateBestSellers.zip
+      UpdateBestSellersCode: Grafana-Bookstore/functions/UpdateBestSellers-v2.zip
       NeptuneLoaderCode: Grafana-Bookstore/functions/NeptuneLoader.zip
       NeptuneIAMCode: Grafana-Bookstore/functions/NeptuneIAM.zip
       bookstoreNeptuneS3DataPath: /data/
