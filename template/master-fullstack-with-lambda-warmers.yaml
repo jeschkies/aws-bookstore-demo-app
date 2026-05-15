@@ -34,14 +34,14 @@ Mappings:
       ListItemsInCartCode: functions/ListItemsInCart.zip
       AddToCartCode: functions/AddToCart.zip
       RemoveFromCartCode: functions/RemoveFromCart.zip
-      GetBestSellersCode: functions/GetBestSellers.zip
+      GetBestSellersCode: functions/GetBestSellers-v2.zip
       CheckoutCode: functions/Checkout.zip
       UploadBooksCode: functions/UploadBooks.zip
       GetRecommendationsCode: functions/GetRecommendations.zip
       GetRecommendationsByBookCode: functions/GetRecommendationsByBook.zip
       SearchCode: functions/Search.zip
       UpdateSearchCode: functions/UpdateSearchCluster.zip
-      UpdateBestSellersCode: functions/UpdateBestSellers.zip
+      UpdateBestSellersCode: functions/UpdateBestSellers-v2.zip
       NeptuneLoaderCode: functions/NeptuneLoader.zip
       NeptuneIAMCode: functions/NeptuneIAM.zip
       bookstoreNeptuneS3DataPath: /data/
