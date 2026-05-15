@@ -6,14 +6,36 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 // Checkout - Process a customer's cart into an order
 exports.handler = (event, context, callback) => {
-    
-  // Return immediately if being called by warmer 
+
+  // Return immediately if being called by warmer
   if (event.source === "warmer") {
     return callback(null, "Lambda is warm");
   }
-  
+
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Credentials" : true
+  };
+
   // Request body is passed in as a JSON encoded string in 'event.body'
-  const data = JSON.parse(event.body);
+  let data;
+  try {
+    data = JSON.parse(event.body);
+  } catch (err) {
+    return callback(null, {
+      statusCode: 400,
+      headers: headers,
+      body: JSON.stringify({ message: "invalid JSON body" }),
+    });
+  }
+  if (!data || !Array.isArray(data.books) || data.books.length === 0) {
+    return callback(null, {
+      statusCode: 400,
+      headers: headers,
+      body: JSON.stringify({ message: "'books' must be a non-empty array of { bookId }" }),
+    });
+  }
+
   const params = {
     TableName: process.env.ORDERS_TABLE, // [ProjectName]-Orders
     // 'Item' contains the attributes of the item to be created
